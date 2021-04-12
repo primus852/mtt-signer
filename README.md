@@ -1,4 +1,4 @@
-# Installation (Ubunut 18.04)
+# Installation (Ubuntu 18.04)
 ## Clone & Install OpenCv
 - `git clone https://github.com/primus852/mtt-signer`
 - `cd mtt-signer`
