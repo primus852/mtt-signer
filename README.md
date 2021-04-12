@@ -18,7 +18,8 @@
 - `pip install -qr ./yolov5/requirements.txt`
 
 ## Train the Model
-- `python3 ./yolov5/train.py --img 416 --batch 16 --epochs 1000 --data ../config.yaml --cfg ../model.yaml --weights '' --name results  --cache`
+- `cd yolov5`
+- `python3 ./train.py --img 416 --batch 16 --epochs 1000 --data ../config.yaml --cfg ../model.yaml --weights '' --name results  --cache`
 
 ## Evaluate the Training
 - `python3 ./yolov5/detect.py --weights runs/train/results/weights/best.pt --img 416 --conf 0.4 --source ../data/test/images`
