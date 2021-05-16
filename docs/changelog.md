@@ -8,6 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 
-- Add transformer module including transform_remove_noise and transform_grayscale function
+- Add data generation module incl. data loading, augmenting and splitting functions
 - Add changelog and PR template
 - Add requirements.txt

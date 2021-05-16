@@ -38,8 +38,17 @@ class ImageTransformer(object):
                 except:
                     print("{} is not converted to gray scale")
 
-    def transform_standardise(self):
-        pass
+    def transform_normalise(self):
+        """Normalise image scale."""
+        for dataset in 'train','test','valid':
+        print(f"Transform {dataset} data.")
+        for fil in glob.glob(f"{self.transformed_data_path}/{dataset}/*.jpg"):
+            try:
+                image = cv2.imread(fil) 
+                normalized_image = cv2.normalize(image, 0, 255, cv2.NORM_MINMAX)
+                cv2.imwrite(fil,normalized_image)
+            except:
+                print('{} is not converted to gray scale') 
 
     def transform_enhancement(self):
         pass
@@ -78,5 +87,5 @@ class ImageTransformer(object):
     def transform_gaussian_blurring(self):
         pass
 
-        def __repr__(self):
-            return "Image transformer"
+    def __repr__(self):
+        return "Image transformer"
