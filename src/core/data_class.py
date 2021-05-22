@@ -88,10 +88,10 @@ class TFDataClass(object):
 
     def download_data(self):
         """Get pre-defined image dataset in TFRecord format from Roboflow."""
-        popen = subprocess.Popen(
-            "!curl -L 'https://app.roboflow.com/ds/rNW01yHJ9Y?key=5oX3PzqFLV' > roboflow.zip; unzip roboflow.zip; rm roboflow.zip"
+        subprocess.run(
+            "!curl -L 'https://app.roboflow.com/ds/rNW01yHJ9Y?key=5oX3PzqFLV' > roboflow.zip; unzip roboflow.zip; rm roboflow.zip",
+            shell=True,
         )
-        out, errs = popen.communicate()
 
     def load_data(self, tfrecord_root: str):
         """Load data into Dataset."""
