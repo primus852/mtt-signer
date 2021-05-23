@@ -88,16 +88,33 @@ class TFDataClass(object):
 
     def download_data(self):
         """Get pre-defined image dataset in TFRecord format from Roboflow."""
-        subprocess.run(
-            "!curl -L 'https://app.roboflow.com/ds/rNW01yHJ9Y?key=5oX3PzqFLV' > roboflow.zip; unzip roboflow.zip; rm roboflow.zip",
+        popen = subprocess.Popen(
+            "curl -L 'https://app.roboflow.com/ds/rNW01yHJ9Y?key=5oX3PzqFLV' > roboflow.zip; unzip roboflow.zip; rm roboflow.zip",
             shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+
+        out, errs = popen.communicate()
+        if popen.returncode != 0:
+            print(
+                "ErrorCode: %d, PopenStdOut: %s,  PopenStdErr: %s"
+                % (popen.returncode, out, errs)
+            )
 
     def load_data(self, tfrecord_root: str):
         """Load data into Dataset."""
-        self.raw_dataset = tf.data.TFRecordDataset([tfrecord_root])
+        for subset in ["train"]:
+            temp_df = tf.data.TFRecordDataset(
+                [f"{tfrecord_root}/{subset}/Letters.tfrecord"]
+            )
+            if self.raw_dataset is None:
+                self.raw_dataset = temp_df
+            else:
 
-        return self.raw_dataset.map(
+                self.raw_dataset = self.raw_dataset.concatenate(temp_df)
+
+        self.raw_dataset_parsed = self.raw_dataset.map(
             lambda x: _parse_image_function(
                 x,
                 IMG_SIZE=self.IMG_SIZE,
@@ -107,10 +124,11 @@ class TFDataClass(object):
             )
         )
 
+        return self.raw_dataset_parsed
+
     def augment_data(self, dataset, augmentations=[flip], num_parallel_calls=4):
         """Augmentation of dataset. Grayscale and standardisation not included."""
         for f in augmentations:
-            # Apply the augmentation, run 4 jobs in parallel.
             augmented_dataset = dataset.map(
                 lambda x, y, z: (flip(x), y, z), num_parallel_calls=num_parallel_calls
             )
@@ -118,8 +136,9 @@ class TFDataClass(object):
         return dataset.concatenate(augmented_dataset).shuffle(len(list(dataset)) * 2)
 
     # TODO: Add validation set
+    # TODO: Speed up process, tf functions?
     def split_data(self, dataset, test_size=0.2):
-        """Train test split."""
+        """Train test split with stratified data."""
         y_targets = np.array(
             [text.numpy().decode("utf-8") for image, target, text in iter(dataset)]
         )
@@ -132,19 +151,17 @@ class TFDataClass(object):
             target_dataset = dataset.filter(lambda x, y, z: z == letter)
             target_dataset = target_dataset.shuffle(dataset_size)
 
-            # Split them
             target_test_samples_len = int(len(list(target_dataset)) * test_size)
             target_test = target_dataset.take(target_test_samples_len)
             target_train = target_dataset.skip(target_test_samples_len)
 
             print(
                 f"Train {letter} = ",
-                len(list(target_test)),
-                " Test {letter} = ",
                 len(list(target_train)),
+                f" Test {letter} = ",
+                len(list(target_test)),
             )
 
-            # Gather datasets
             if n == 0:
                 train_dataset = target_train
                 test_dataset = target_test
