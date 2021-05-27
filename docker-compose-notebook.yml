@@ -1,0 +1,15 @@
+version: "3.3"
+
+services:
+  nbk:
+    build: .
+    networks:
+      - mtt-signer
+    environment:
+      - JUPYTER_ENABLE_LAB:"yes"
+    ports:
+      - "0.0.0.0:8888:8888"
+    entrypoint: ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root"]
+
+networks:
+  mtt-signer:
