@@ -7,6 +7,7 @@ class CollectBatchStats(tf.keras.callbacks.Callback):
     """Class for collecting statistics about training metrics."""
 
     def __init__(self):
+        super().__init__()
         self.batch_losses = []
         self.batch_acc = []
 

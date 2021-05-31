@@ -23,7 +23,7 @@ image_feature_description = {
 
 # TODO: Do we need the preprocessing more explicitly?
 def _parse_image_function(
-    example_proto, IMG_SIZE, channels, gray_scale, standardization
+        example_proto, IMG_SIZE, channels, gray_scale, standardization
 ):
     # Parse the input tf.train.Example proto using the dictionary above.
     features = tf.io.parse_single_example(example_proto, image_feature_description)
@@ -74,10 +74,11 @@ def rotate(x: tf.Tensor) -> tf.Tensor:
 
     # Rotate 0, 90, 180, 270 degrees
     return tf.image.rot90(
-        x, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32)
-    # Rotate 20 degrees
-       x = ImageDataGenerator(rotation_range=20)
+        x, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32),
+        # Rotate 20 degrees
+        x=ImageDataGenerator(rotation_range=20)
     )
+
 
 # added by Mayco 28.05.2021
 def color(x: tf.Tensor) -> tf.Tensor:
@@ -121,7 +122,6 @@ def zoom(x: tf.Tensor) -> tf.Tensor:
         # Return a random crop
         return crops[tf.random_uniform(shape=[], minval=0, maxval=len(scales), dtype=tf.int32)]
 
-
     choice = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
 
     # Only apply cropping 50% of the time
@@ -159,8 +159,9 @@ def distort_color(image, thread_id=0, scope=None):
     # The random_* ops do not necessarily clamp.
     image = tf.clip_by_value(image, 0.0, 1.0)
     return image
-      
-## Todo: we need it?       
+
+
+# Todo: we need it?
 def distort_image(image, height, width, bbox, thread_id=0, scope=None):
     """Distort one image for training a network.
    Distorting images provides a useful technique for augmenting the data
@@ -179,66 +180,66 @@ def distort_image(image, height, width, bbox, thread_id=0, scope=None):
     3-D float Tensor of distorted image used for training.
   """
     with tf.op_scope([image, height, width, bbox], scope, 'distort_image'):
-    # Each bounding box has shape [1, num_boxes, box coords] and
-    # the coordinates are ordered [ymin, xmin, ymax, xmax].
+        # Each bounding box has shape [1, num_boxes, box coords] and
+        # the coordinates are ordered [ymin, xmin, ymax, xmax].
 
-    # Display the bounding box in the first thread only.
-    if not thread_id:
-        image_with_box = tf.image.draw_bounding_boxes(tf.expand_dims(image, 0),
-                                                    bbox)
-      tf.image_summary('image_with_bounding_boxes', image_with_box)
+        # Display the bounding box in the first thread only.
+        if not thread_id:
+            image_with_box = tf.image.draw_bounding_boxes(tf.expand_dims(image, 0),
+                                                          bbox)
+        tf.image_summary('image_with_bounding_boxes', image_with_box)
 
-  # A large fraction of image datasets contain a human-annotated bounding
-  # box delineating the region of the image containing the object of interest.
-  # We choose to create a new bounding box for the object which is a randomly
-  # distorted version of the human-annotated bounding box that obeys an allowed
-  # range of aspect ratios, sizes and overlap with the human-annotated
-  # bounding box. If no box is supplied, then we assume the bounding box is
-  # the entire image.
-    sample_distorted_bounding_box = tf.image.sample_distorted_bounding_box(
-        tf.shape(image),
-        bounding_boxes=bbox,
-        min_object_covered=0.1,
-        aspect_ratio_range=[0.75, 1.33],
-        area_range=[0.05, 1.0],
-        max_attempts=100,
-        use_image_if_no_bounding_boxes=True)
-    bbox_begin, bbox_size, distort_bbox = sample_distorted_bounding_box
-    if not thread_id:
-        image_with_distorted_box = tf.image.draw_bounding_boxes(
-           tf.expand_dims(image, 0), distort_bbox)
-        tf.image_summary('images_with_distorted_bounding_box',
-                       image_with_distorted_box)
+        # A large fraction of image datasets contain a human-annotated bounding
+        # box delineating the region of the image containing the object of interest.
+        # We choose to create a new bounding box for the object which is a randomly
+        # distorted version of the human-annotated bounding box that obeys an allowed
+        # range of aspect ratios, sizes and overlap with the human-annotated
+        # bounding box. If no box is supplied, then we assume the bounding box is
+        # the entire image.
+        sample_distorted_bounding_box = tf.image.sample_distorted_bounding_box(
+            tf.shape(image),
+            bounding_boxes=bbox,
+            min_object_covered=0.1,
+            aspect_ratio_range=[0.75, 1.33],
+            area_range=[0.05, 1.0],
+            max_attempts=100,
+            use_image_if_no_bounding_boxes=True)
+        bbox_begin, bbox_size, distort_bbox = sample_distorted_bounding_box
+        if not thread_id:
+            image_with_distorted_box = tf.image.draw_bounding_boxes(
+                tf.expand_dims(image, 0), distort_bbox)
+            tf.image_summary('images_with_distorted_bounding_box',
+                             image_with_distorted_box)
 
-    # Crop the image to the specified bounding box.
-    distorted_image = tf.slice(image, bbox_begin, bbox_size)
+        # Crop the image to the specified bounding box.
+        distorted_image = tf.slice(image, bbox_begin, bbox_size)
 
-    # This resizing operation may distort the images because the aspect
-    # ratio is not respected. We select a resize method in a round robin
-    # fashion based on the thread number.
-    # Note that ResizeMethod contains 4 enumerated resizing methods.
-    resize_method = thread_id % 4
-    distorted_image = tf.image.resize_images(distorted_image, [height, width],
-                                             method=resize_method)
-    # Restore the shape since the dynamic slice based upon the bbox_size loses
-    # the third dimension.
-    distorted_image.set_shape([height, width, 3])
-    if not thread_id:
-        tf.image_summary('cropped_resized_image',
-                       tf.expand_dims(distorted_image, 0))
+        # This resizing operation may distort the images because the aspect
+        # ratio is not respected. We select a resize method in a round robin
+        # fashion based on the thread number.
+        # Note that ResizeMethod contains 4 enumerated resizing methods.
+        resize_method = thread_id % 4
+        distorted_image = tf.image.resize_images(distorted_image, [height, width],
+                                                 method=resize_method)
+        # Restore the shape since the dynamic slice based upon the bbox_size loses
+        # the third dimension.
+        distorted_image.set_shape([height, width, 3])
+        if not thread_id:
+            tf.image_summary('cropped_resized_image',
+                             tf.expand_dims(distorted_image, 0))
 
-    # Randomly flip the image horizontally.
-    #distorted_image = tf.image.random_flip_left_right(distorted_image)
+        # Randomly flip the image horizontally.
+        # distorted_image = tf.image.random_flip_left_right(distorted_image)
 
-    # Randomly distort the colors.
-    distorted_image = distort_color(distorted_image, thread_id)
+        # Randomly distort the colors.
+        distorted_image = distort_color(distorted_image, thread_id)
 
-    if not thread_id:
-        tf.image_summary('final_distorted_image',
-                       tf.expand_dims(distorted_image, 0))
-    return distorted_image        
-             
-        
+        if not thread_id:
+            tf.image_summary('final_distorted_image',
+                             tf.expand_dims(distorted_image, 0))
+        return distorted_image
+
+
 # TODO: Add more augment functions
 class TFDataClass(object):
     """Class for data preparation for TF models."""

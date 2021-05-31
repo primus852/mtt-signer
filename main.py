@@ -1,8 +1,8 @@
-import torch
-import matplotlib
-
-## HELLO MAYCO
+from src import opencv
 
 if __name__ == '__main__':
-    print('Setup complete. Using torch %s %s' % (
-        torch.__version__, torch.cuda.get_device_properties(0) if torch.cuda.is_available() else 'CPU'))
+    print('Loading Video Stream, this may take a while...')
+
+    ocv = opencv.OpenCVStream()
+
+
