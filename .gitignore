@@ -1,3 +1,5 @@
 *.cache
 .idea
 /out/
+/src/opencv/models/faster_rcnn_resnet50_coco/frozen_inference_graph.pb
+/src/opencv/models/ssd_mobilenet_v2_coco/frozen_inference_graph.pb

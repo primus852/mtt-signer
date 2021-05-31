@@ -4,6 +4,8 @@ import numpy as np
 import pathlib
 import os
 
+from .download import download_file_from_google_drive
+
 
 class OpenCVStream:
     """Object Detection on OpenCV Capture"""
@@ -25,8 +27,8 @@ class OpenCVStream:
 
         self.video_input = video_input
         self.labels = labels
-        self.model = self._load_model()
         self.model_name = model_name
+        self.model = self._load_model()
 
         with open(pathlib.Path(__file__).parent / 'models' / '{}.txt'.format(self.labels), 'r') as f:
             self.class_names = f.read().split('\n')
@@ -48,6 +50,13 @@ class OpenCVStream:
         @TODO: Use own classes and own model
         :return:
         """
+
+        # Check if the file exists
+        model_file = pathlib.Path('{}/frozen_inference_graph.pb'.format(self.models_path))
+        if not model_file.is_file():
+            print('Model File is missing, downloading from GDrive, please stand by...')
+            download_file_from_google_drive(self.model_name, self.models_path)
+
         # Load the DNN model
         return cv2.dnn.readNet(model='{}/frozen_inference_graph.pb'.format(self.models_path),
                                config='{}/config.pbtxt'.format(self.models_path),

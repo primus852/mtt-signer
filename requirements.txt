@@ -1,3 +1,5 @@
 opencv-python==4.1.2.30
-tensorflow
+tensorflow~=2.5.0
 tensorflow-hub
+numpy~=1.19.5
+requests~=2.25.1

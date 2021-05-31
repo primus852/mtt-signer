@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ### Changed
 - Added a sample Implementation for OpenCV Detection
 - `main.py` now needs OpenCV >4.2 installed on OS
+- Added a downloader for big model files from GDrive due to Githubs Filesize Limitations
 
 ## [v1.1] - 2021-05-13
 
