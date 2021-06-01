@@ -5,6 +5,8 @@ import subprocess
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+# TODO: Add background removal
+
 # Create a dictionary describing the image features.
 image_feature_description = {
     "image/encoded": tf.io.FixedLenFeature([], tf.string),
@@ -47,6 +49,8 @@ def _parse_image_function(
     return image, label, text_label
 
 
+# TODO: Add distortion
+# TODO: Check if flip/rotating will "create" new letter
 def flip(x: tf.Tensor) -> tf.Tensor:
     """Flip augmentation
 
@@ -244,10 +248,11 @@ def distort_image(image, height, width, bbox, thread_id=0, scope=None):
 class TFDataClass(object):
     """Class for data preparation for TF models."""
 
-    def __init__(self, IMG_SIZE, channels):
+    def __init__(self, IMG_SIZE):
         """Initialize class."""
-        self.IMG_SIZE = IMG_SIZE
-        self.channels = channels
+        self.IMG_SIZE = (IMG_SIZE[0],IMG_SIZE[1])
+        self.channels = IMG_SIZE[2]
+        self.raw_dataset= None
 
     def download_data(self):
         """Get pre-defined image dataset in TFRecord format from Roboflow."""
@@ -265,9 +270,9 @@ class TFDataClass(object):
                 % (popen.returncode, out, errs)
             )
 
-    def load_data(self, tfrecord_root: str):
+    def load_data(self, tfrecord_root: str,gray_scale:bool = False, standardization: bool = False):
         """Load data into Dataset."""
-        for subset in ["train"]:
+        for subset in ["train", "test", "valid"]:
             temp_df = tf.data.TFRecordDataset(
                 [f"{tfrecord_root}/{subset}/Letters.tfrecord"]
             )
@@ -280,7 +285,7 @@ class TFDataClass(object):
         self.raw_dataset_parsed = self.raw_dataset.map(
             lambda x: _parse_image_function(
                 x,
-                IMG_SIZE=self.IMG_SIZE,
+                IMG_SIZE=self.IMG_SIZE[0],
                 channels=self.channels,
                 gray_scale=False,
                 standardization=False,
