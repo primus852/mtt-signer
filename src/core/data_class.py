@@ -5,7 +5,7 @@ import tensorflow_addons as tfa
 import tensorflow as tf
 
 
-# TODO: Add background removal
+
 
 # Create a dictionary describing the image features.
 image_feature_description = {
@@ -48,6 +48,18 @@ def _parse_image_function(
     # TODO: Add new naming for resulting ds
     return image, label, text_label
 
+
+def plot_images(dataset, n_images, samples_per_image):
+    output = np.zeros((32 * n_images, 32 * samples_per_image, 3))
+
+    row = 0
+    for images in dataset.repeat(samples_per_image).batch(n_images):
+        output[:, row*32:(row+1)*32] = np.vstack(images.numpy())
+        row += 1
+
+    plt.figure()
+    plt.imshow(output)
+    plt.show()
 
 # TODO: Add distortion
 # TODO: Check if flip/rotating will "create" new letter
@@ -208,14 +220,17 @@ class TFDataClass(object):
 
         return self.raw_dataset_parsed
 
-    def augment_data(self, dataset, augmentations=[flip], num_parallel_calls=4):
+    def augment_data(self, dataset, augmentations=[flipU], num_parallel_calls=5):
         """Augmentation of dataset. Grayscale and standardisation not included."""
+        augmented_dataset=dataset
         for f in augmentations:
-            augmented_dataset = dataset.map(
+            temp_df = dataset.map(
                 lambda x, y, z: (f(x), y, z), num_parallel_calls=num_parallel_calls
             )
+            augmented_dataset=augmented_dataset.concatenate(temp_df)
 
-        return dataset.concatenate(augmented_dataset).shuffle(len(list(dataset)) * 2)
+        return augmented_dataset.shuffle(len(list(dataset)) * 2)
+
 
     # TODO: Add validation set
     # TODO: Speed up process, tf functions?
