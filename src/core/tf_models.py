@@ -27,8 +27,8 @@ class TF_BaseModel(object):
         self,
         model_link,
         image_shape,
-        trainable,
         n_target,
+        trainable=False,
         classification_head_activation="softmax",
     ):
         """Initialise class.
