@@ -15,18 +15,20 @@ from tensorflow import keras
 
 from timeit import default_timer as timer
 
+
 class TimingCallback(tf.keras.callbacks.Callback):
     def __init__(self, logs={}):
-        self.logs=[]
+        self.logs = []
+
     def on_epoch_begin(self, epoch, logs={}):
         self.starttime = timer()
-    def on_epoch_end(self, epoch, logs={}):
-        self.logs.append(timer()-self.starttime)
 
+    def on_epoch_end(self, epoch, logs={}):
+        self.logs.append(timer() - self.starttime)
 
 
 class LossAndErrorPrintingCallback(keras.callbacks.Callback):
-# Loss and Error Printing Callback
+    # Loss and Error Printing Callback
 
     def on_train_batch_end(self, batch, logs=None):
         print("For batch {}, loss is {:7.2f}.".format(batch, logs["loss"]))
@@ -42,13 +44,14 @@ class LossAndErrorPrintingCallback(keras.callbacks.Callback):
             )
         )
 
-class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
-    """ Stop training when the loss is at its min, i.e. the loss stops decreasing.
 
-  Arguments:
-      patience: Number of epochs to wait after min has been hit. After this
-      number of no improvement, training stops.
-  """
+class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
+    """Stop training when the loss is at its min, i.e. the loss stops decreasing.
+
+    Arguments:
+        patience: Number of epochs to wait after min has been hit. After this
+        number of no improvement, training stops.
+    """
 
     def __init__(self, patience=0):
         super(EarlyStoppingAtMinLoss, self).__init__()
@@ -89,7 +92,7 @@ class TF_BaseModel(object):
 
     # TODO: Check options for argument dict
     # TODO: Check how to use variable channels for same model (mobilenet needs 3 but also possible with grayscale?)
-    
+
     def __init__(self, model_link, image_shape, trainable, n_target):
         """Initialise class.
 
@@ -106,56 +109,63 @@ class TF_BaseModel(object):
         self.image_shape = image_shape
         self.trainable = trainable
         self.n_target = n_target
-        #self.model =tf.keras.Sequential()
-        #hublayer = hub.KerasLayer(self.model_link, input_shape =image_shape, trainable = self.trainable)
-        #self.model.add(hublayer)
-        #self.model.add(tf.keras.layers.Dense(128, activation='softmax'))
-    
-       
+        # self.model =tf.keras.Sequential()
+        # hublayer = hub.KerasLayer(self.model_link, input_shape =image_shape, trainable = self.trainable)
+        # self.model.add(hublayer)
+        # self.model.add(tf.keras.layers.Dense(128, activation='softmax'))
+
         self.model = tf.keras.Sequential(
             [
-                tf.keras.layers.InputLayer (input_shape = image_shape),
-                hub.KerasLayer(self.model_link,trainable=self.trainable),
+                tf.keras.layers.InputLayer(input_shape=image_shape),
+                hub.KerasLayer(self.model_link, trainable=self.trainable),
                 tf.keras.layers.Flatten(),
                 tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Dense(300, activation="elu", kernel_initializer="he_normal"),
+                tf.keras.layers.Dense(
+                    300, activation="elu", kernel_initializer="he_normal"
+                ),
                 tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Dense(100, activation="elu", kernel_initializer="he_normal"),
+                tf.keras.layers.Dense(
+                    100, activation="elu", kernel_initializer="he_normal"
+                ),
                 tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Dropout(rate=0.2),
-                tf.keras.layers.Dense (self.n_target, activation='softmax', kernel_regularizer= tf.keras.regularizers.l2(0.0001))
-            ])
-             
-             
-         #self.model = tf.keras.Sequential(
-             #[   
-                #hub.KerasLayer(
-                    #self.model_link,
-                    #input_shape=image_shape,
-                    #trainable=self.trainable,
-                    #arguments=dict(batch_norm_momentum=0.997)
-                #),
-             # ADD new layers here e.g. batch_normalization, drop_out
-             #Layernormalization (https://colab.research.google.com/github/tensorflow/addons/blob/master/docs/tutorials/layers_normalizations.ipynb#scrollTo=Fh-Pp_e5UB54)
-               #tf.keras.layers.LayerNormalization(axis=3 , center=True , scale=True),
-               #tf.keras.layers.Flatten(),
-               #tf.keras.layers.Dense(128, activation='relu'),
-               #tf.keras.layers.Dropout(0.2),
+                tf.keras.layers.Dense(
+                    self.n_target,
+                    activation="softmax",
+                    kernel_regularizer=tf.keras.regularizers.l2(0.0001),
+                ),
+            ]
+        )
 
-             #Batch Norminalization
-                 #tf.keras.layers.Flatten(),
-                 #tf.keras.layers.BatchNormalization(),
-                 #tf.keras.layers.Dense(300, activation="elu", kernel_initializer="he_normal"),
-                 #tf.keras.layers.BatchNormalization(),
-                 #tf.keras.layers.Dense(100, activation="elu", kernel_initializer="he_normal"),
-                 #tf.keras.layers.BatchNormalization(),
-                 #tf.keras.layers.Dropout(0.2),
-                #tf.keras.layers.Dense(self.n_target, activation='softmax',kernel_initializer="glorot_uniform")
-            #],
-        #)
+        # self.model = tf.keras.Sequential(
+        # [
+        # hub.KerasLayer(
+        # self.model_link,
+        # input_shape=image_shape,
+        # trainable=self.trainable,
+        # arguments=dict(batch_norm_momentum=0.997)
+        # ),
+        # ADD new layers here e.g. batch_normalization, drop_out
+        # Layernormalization (https://colab.research.google.com/github/tensorflow/addons/blob/master/docs/tutorials/layers_normalizations.ipynb#scrollTo=Fh-Pp_e5UB54)
+        # tf.keras.layers.LayerNormalization(axis=3 , center=True , scale=True),
+        # tf.keras.layers.Flatten(),
+        # tf.keras.layers.Dense(128, activation='relu'),
+        # tf.keras.layers.Dropout(0.2),
+
+        # Batch Norminalization
+        # tf.keras.layers.Flatten(),
+        # tf.keras.layers.BatchNormalization(),
+        # tf.keras.layers.Dense(300, activation="elu", kernel_initializer="he_normal"),
+        # tf.keras.layers.BatchNormalization(),
+        # tf.keras.layers.Dense(100, activation="elu", kernel_initializer="he_normal"),
+        # tf.keras.layers.BatchNormalization(),
+        # tf.keras.layers.Dropout(0.2),
+        # tf.keras.layers.Dense(self.n_target, activation='softmax',kernel_initializer="glorot_uniform")
+        # ],
+        # )
         self.model.build(image_shape)
         self.model.summary()
-        #self.history = None
+        # self.history = None
 
     # TODO: Test optimisation on different optimizers, losses and metrics
     def train(
@@ -167,7 +177,7 @@ class TF_BaseModel(object):
         optimizer: str,
         loss: str,
         metrics: str,
-        callbacks: list
+        callbacks: list,
     ):
         """
         Train model.
@@ -187,24 +197,24 @@ class TF_BaseModel(object):
         self.model.compile(
             optimizer=optimizer,
             loss=loss,
-            metrics= metrics,
+            metrics=metrics,
         )
 
         # Resize image to needed input size for models
         x_train = np.array(
             [
                 tf.image.resize(x, [self.image_shape[0], self.image_shape[1]])
-                for x, y, z in train_dataset
+                for x, y in train_dataset
             ]
         )
-        y_train = np.array([y for x, y, z in train_dataset])
+        y_train = np.array([y for x, y in train_dataset])
         x_val = np.array(
             [
                 tf.image.resize(x, [self.image_shape[0], self.image_shape[1]])
-                for x, y, z in val_dataset
+                for x, y in val_dataset
             ]
         )
-        y_val = np.array([y for x, y, z in val_dataset])
+        y_val = np.array([y for x, y in val_dataset])
 
         # TODO: Add validation_split as parameter instead of validation dataset
         # TODO: Add callback and earlystopping
@@ -216,7 +226,7 @@ class TF_BaseModel(object):
             validation_data=(x_val, y_val),
             # verbose set to 2 for avoiding slow callbacks
             verbose=2,
-            callbacks=callbacks
+            callbacks=callbacks,
         )
 
     def predict(self, prediction_dataset):
